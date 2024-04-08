@@ -1,0 +1,10 @@
+# Cloud Function requires Functions Framework for Python as a dependency
+functions-framework==3.3.0
+cloudevents==1.10.1
+google-cloud-storage==1.42.3
+
+
+# Requirements from ECM Automation code
+pandas==2.1.4
+requests==2.31.0
+openpyxl==3.0.10

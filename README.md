@@ -42,3 +42,20 @@ gcloud projects add-iam-policy-binding assetinsure-surety-data-models \
 
 
 #TODO: need to investigate the service account and service agent linked to pub sub cloud storage and cloud functions and permissions
+
+
+
+HTTP Cloud Function
+gcloud functions deploy python-http-create-frp-function \
+--gen2 \
+--runtime=python312 \
+--region=europe-west2 \
+--source=. \
+--entry-point=main \
+--trigger-http \
+--allow-unauthenticated
+
+--no-allow-unauthenticated
+Then run like this:
+curl  -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
+  https://europe-west2-assetinsure-surety-data-models.cloudfunctions.net/python-private-http-create-frp-function

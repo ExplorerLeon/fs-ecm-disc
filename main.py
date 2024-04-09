@@ -5,6 +5,7 @@ import warnings
 from cloudevents.http import CloudEvent
 from google.cloud import storage
 import glob
+import os
 
 import functions_framework
 
@@ -573,39 +574,18 @@ def main_upload(args):
 
 
 # *================================== main ===================================*
-# Triggered by a change in a storage bucket
-@functions_framework.cloud_event
-def main(cloud_event: CloudEvent) -> tuple:
-    """This function is triggered by a change in a storage bucket.
-
-    Args:
-        cloud_event: The CloudEvent that triggered this function.
-    Returns:
-        The event ID, event type, bucket, name, metageneration, and timeCreated.
+# Triggered by HTTP request
+@functions_framework.http
+def main(request):
+    """This function is triggered by http request
     """
-    data = cloud_event.data
-
-    event_id = cloud_event["id"]
-    event_type = cloud_event["type"]
-
-    bucket = data["bucket"]
-    name = data["name"]
-    metageneration = data["metageneration"]
-    timeCreated = data["timeCreated"]
-    updated = data["updated"]
-
-    print(f"Event ID: {event_id}")
-    print(f"Event type: {event_type}")
-    print(f"Bucket: {bucket}")
-    print(f"File: {name}")
-    print(f"Metageneration: {metageneration}")
-    print(f"Created: {timeCreated}")
-    print(f"Updated: {updated}")
 
     # Configure Google Cloud Storage client - download input file
+    name = "FRPSep2023-FirstLoss-Change.xlsx"
     client = storage.Client()
     temp_file = f"/tmp/{name}"
-    bucket = client.bucket(bucket)
+    bucket_name = "ecm_automation_disc"
+    bucket = client.get_bucket(bucket_name)
     blob = bucket.blob(name)
     blob.download_to_filename(temp_file)
 
@@ -621,29 +601,32 @@ def main(cloud_event: CloudEvent) -> tuple:
     output_bucket = "ecm_automation_p1_output_disc"
 
     # Upload all files in the /tmp directory to the output bucket
-    for file_path in glob.glob('/tmp/*'):
-        file_name = os.path.basename(file_path)
-        output_blob_name = file_name
-        output_bucket_name = "ecm_automation_p1_output_disc"
+    for file_path in glob.glob('/tmp/*.xlsx'):
+        if os.path.isfile(file_path):
+            file_name = os.path.basename(file_path)
+            print(file_name)
+            output_blob_name = file_name
+            output_bucket_name = "ecm_automation_p1_output_disc"
 
-        # # Check if the file starts with 'EC'
-        # if file_name.startswith('EC'):
-        output_bucket = output_client.get_bucket(output_bucket_name)
-        print("success")
+            # # Check if the file starts with 'EC'
+            # if file_name.startswith('EC'):
+            output_bucket = output_client.get_bucket(output_bucket_name)
+            print("success")
 
-        output_blob = output_bucket.blob(output_blob_name)
-        output_blob.upload_from_filename(file_path)
+            output_blob = output_bucket.blob(output_blob_name)
+            output_blob.upload_from_filename(file_path)
 
-        print(f"Uploaded {file_name} to Cloud Storage.")
+            print(f"Uploaded {file_name} to Cloud Storage.")
 
     print("Processing complete.")
 
     # Delete all files in the /tmp directory
     for file_path in glob.glob('/tmp/*'):
-        os.remove(file_path)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
 
 
-    return event_id, event_type, bucket, name, metageneration, timeCreated, updated
+    return "success"
 
     # set_logger()
     # ARGS = parse_arguments()

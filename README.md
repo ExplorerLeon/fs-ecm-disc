@@ -59,3 +59,35 @@ gcloud functions deploy python-http-create-frp-function \
 Then run like this:
 curl  -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
   https://europe-west2-assetinsure-surety-data-models.cloudfunctions.net/python-private-http-create-frp-function
+
+
+Event Cloud Function
+PubSub Cloud Scheduler and Cloud Function
+
+- Create topic
+```
+gcloud pubsub topics create disc-ecm-automate-function-topic
+
+# not needed for thsi - pull subscr just to see message but cloud functions automatically creates a push one
+gcloud pubsub subscriptions create disc-ecm-automate-function-subs --topic disc-ecm-automate-function-topic
+```
+
+- Deploy functions
+```
+gcloud functions deploy python-createfrp-pubsub-schedule-function \
+--gen2 \
+--runtime=python312 \
+--region=europe-west2 \
+--source=. \
+--entry-point=main \
+--trigger-topic=disc-ecm-automate-function-topic
+```
+
+- Create schedule
+```
+gcloud scheduler jobs create pubsub ecm-automation-monthly-cron \
+    --location=europe-west2 \
+    --schedule="*/3 * * * *" \
+    --topic=disc-ecm-automate-function-topic \
+    --message-body="schedule time - lesgo"
+```

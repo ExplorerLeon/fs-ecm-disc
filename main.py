@@ -6,7 +6,7 @@ from cloudevents.http import CloudEvent
 from google.cloud import storage
 import glob
 import os
-
+import base64
 import functions_framework
 
 
@@ -574,11 +574,16 @@ def main_upload(args):
 
 
 # *================================== main ===================================*
-# Triggered by HTTP request
-@functions_framework.http
-def main(request):
+# Triggered by PubSub Cloud Schedule
+@functions_framework.cloud_event
+def main(cloud_event: CloudEvent) -> None:
     """This function is triggered by http request
     """
+
+        # Print out the data from Pub/Sub, to prove that it worked
+    print(
+        "Hello, " + base64.b64decode(cloud_event.data["message"]["data"]).decode() + "!"
+    )
 
     # Configure Google Cloud Storage client - download input file
     name = "FRPSep2023-FirstLoss-Change.xlsx"
